@@ -1,2 +1,6 @@
 #NomicsAPI is being added to the .gitignore after initilization, do not push API keys to repo!
-NomicsAPI.py
+.env
+
+#ignoring pulled data for now during development
+/data/json/in_sample/**
+/data/json/out_sample/**
