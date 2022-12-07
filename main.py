@@ -1,4 +1,4 @@
-
+import NomicsAPI
 
 """
 Plan for Dec7th
@@ -8,4 +8,4 @@ Create a Data_pull class with the following parameters: Pair, timeframe,
 """
 
 if __name__ == "__main__":
-    print("hello world")
+    print(NomicsAPI.API_KEY)
