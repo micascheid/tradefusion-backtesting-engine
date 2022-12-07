@@ -1,3 +1,3 @@
 from nomics import Nomics
 
-KEY = Nomics("API_KEY")
+KEY = Nomics("TEST_KEY")
