@@ -1,0 +1,11 @@
+#NomicsAPI is being added to the .gitignore after initilization, do not push API keys to repo!
+.env
+__pycache__
+#ignoring pulled data for now during development
+/data/json_raw/**
+
+#MessAround file is a main to play with python code before implementation
+MessAround.py
+
+#Handling empty data folders
+!/data/json_raw/.gitkeep
