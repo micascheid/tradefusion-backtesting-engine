@@ -87,10 +87,10 @@ class DataPull:
 
     def configure_time_delta(self) -> (timedelta, timedelta):
         if self.time_frame_unit == MINUTELY:
-            return (timedelta(minutes=interval_limit_dict[self.time_frame].value - 1),
+            return (timedelta(minutes=(interval_limit_dict[self.time_frame].value * int(self.time_frame_quantity)) - 1),
                     timedelta(minutes=int(self.time_frame_quantity)))
         if self.time_frame_unit == HOURLY:
-            return (timedelta(hours=interval_limit_dict[self.time_frame].value - 1),
+            return (timedelta(hours=(interval_limit_dict[self.time_frame].value * int(self.time_frame_quantity)) - 1),
                     timedelta(hours=int(self.time_frame_quantity)))
         if self.time_frame_unit == DAILY:
             if self.time_frame_unit == HOURLY:

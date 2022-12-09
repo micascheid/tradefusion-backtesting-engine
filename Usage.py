@@ -15,7 +15,6 @@ class Usage:
         print("Grabbing usage starting from the first of the month for {}...".format(month_name))
 
         start = datetime(year=year, month=month, day=1).isoformat()+"Z"
-        print(self.API_KEY)
         url = "https://api.nomics.com/v1/meta/usage?key="+self.API_KEY+"&start="+start
         usage = urllib.request.urlopen(url).read()
         json_list = json.loads(usage)
