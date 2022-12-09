@@ -25,4 +25,27 @@ class IntervalLimits(Enum):
     ONE_DAY = None
 
 
+interval_limit_dict = {
+    "1m": IntervalLimits.ONE_MINUTE,
+    "5m": IntervalLimits.FIVE_MINUTE,
+    "30m": IntervalLimits.THIRTY_MINUTE,
+    "1h": IntervalLimits.ONE_HOUR,
+    "4h": IntervalLimits.FOUR_HOUR,
+    "1d": IntervalLimits.ONE_DAY,
+}
+
+
+class TimeFrames(Enum):
+    ONE_MINUTE = "1m"
+    FIVE_MINUTE = "5m"
+    THIRTY_MINUTE = "30m"
+    ONE_HOUR = "1h"
+    FOUR_HOUR = "4h"
+    SIX_HOUR = "6h"
+    TWELVE_HOUR = "12h"
+    ONE_DAY = "1d"
+
+
+
+
 
