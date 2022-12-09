@@ -6,3 +6,6 @@ __pycache__
 
 #MessAround file is a main to play with python code before implementation
 MessAround.py
+
+#Handling empty data folders
+!/data/json_raw/.gitkeep
