@@ -4,7 +4,7 @@ import NomicsAPI
 import urllib.request
 
 
-class Usage():
+class Usage:
     def __init__(self, API_KEY):
         self.API_KEY = API_KEY
 
