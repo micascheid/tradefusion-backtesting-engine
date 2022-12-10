@@ -22,7 +22,7 @@ class IntervalLimits(Enum):
     THIRTY_MINUTE = 672
     ONE_HOUR = 720
     FOUR_HOUR = 720
-    ONE_DAY = None
+    ONE_DAY = 9999
 
 interval_limit_max_time_call = {
     "1m": IntervalLimits.ONE_MINUTE.value * 60,

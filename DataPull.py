@@ -7,6 +7,8 @@ import NomicsAPI
 import json
 from datetime import datetime, timedelta
 from IntervalLimits import IntervalLimits, interval_limit_dict, interval_limit_max_time_call, TimeFrames
+import pandas as pd
+
 
 KEY = NomicsAPI.API_KEY
 U = "__"
@@ -14,6 +16,7 @@ MINUTELY = "m"
 HOURLY = "h"
 DAILY = "d"
 JSON_RAW_DIR = "./data/json_raw/"
+JSON_RAW_TO_DF = "./data/df_raw/"
 
 
 class DataPull:
@@ -103,12 +106,19 @@ class DataPull:
 
     def pull_and_export(self):
         file_export = self.file_name_creator()
-        raw_data = self.data_conglomeration()
-        print(raw_data)
-        list_for_export = json.dumps(raw_data)
-        file = open(JSON_RAW_DIR+file_export, 'w')
+        raw_json = self.data_conglomeration()
+        self.export_json(file_export, raw_json)
+        self.export_df(file_export, raw_json)
+
+    def export_json(self, file_name, raw_json):
+        list_for_export = json.dumps(raw_json)
+        file = open(JSON_RAW_DIR + file_name, 'w')
         file.write(list_for_export)
         file.close()
+
+    def export_df(self,file_name, raw_json):
+        df = pd.DataFrame.from_records(raw_json)
+        df.to_csv(JSON_RAW_TO_DF + file_name + "csv")
 
 
 
