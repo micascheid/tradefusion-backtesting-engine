@@ -36,27 +36,31 @@ class DataPull:
         start = self.start
         end = self.end
         main_list = []
-        DELTA = self.deltas[0]
-        DELTA_NEXT = self.deltas[1]
-        time_diff = end - start
-        conglomerate_tuple = self.to_conglomerate_or_not()
-        conglomerate = conglomerate_tuple[0]
-        total_candles = conglomerate_tuple[1]
-        iteration = int(total_candles // interval_limit_dict[self.time_frame].value)
-        last_candles = total_candles % interval_limit_dict[self.time_frame].value
-        start_new = start
-        if conglomerate:
-            for i in range(iteration):
-                time_1 = start_new
-                time_2 = time_1 + DELTA
-                json_obj = self.api_call(start=time_1, end=time_2)
-                [main_list.append(candle) for candle in json_obj]
-                print(i, "|", time_1, time_2)
-                start_new = time_2 + DELTA_NEXT
-        if last_candles != 0:
-            print("last call", "|", start_new, self.end)
-            json_obj = self.api_call(start=start_new, end=self.end)
+        if self.time_frame_unit == "d":
+            json_obj = self.api_call(start=start, end=self.end)
             [main_list.append(candle) for candle in json_obj]
+        else:
+            DELTA = self.deltas[0]
+            DELTA_NEXT = self.deltas[1]
+            time_diff = end - start
+            conglomerate_tuple = self.to_conglomerate_or_not()
+            conglomerate = conglomerate_tuple[0]
+            total_candles = conglomerate_tuple[1]
+            iteration = int(total_candles // interval_limit_dict[self.time_frame].value)
+            last_candles = total_candles % interval_limit_dict[self.time_frame].value
+            start_new = start
+            if conglomerate:
+                for i in range(iteration):
+                    time_1 = start_new
+                    time_2 = time_1 + DELTA
+                    json_obj = self.api_call(start=time_1, end=time_2)
+                    [main_list.append(candle) for candle in json_obj]
+                    print(i, "|", time_1, time_2)
+                    start_new = time_2 + DELTA_NEXT
+            if last_candles != 0:
+                print("last call", "|", start_new, self.end)
+                json_obj = self.api_call(start=start_new, end=self.end)
+                [main_list.append(candle) for candle in json_obj]
         return main_list
 
     def to_conglomerate_or_not(self) -> (bool, int):
@@ -68,7 +72,7 @@ class DataPull:
         elif self.time_frame_unit == "h":
             total_candles = (time_diff.total_seconds()/3600)/float(self.time_frame_quantity)
         elif self.time_frame_unit == "d":
-            total_candles = (time_diff.total_seconds()/86400)/float(self.time_frame_quantity)
+            return False
 
         if total_candles > interval_limit_dict[self.time_frame].value:
             conglomerate = True
@@ -94,8 +98,8 @@ class DataPull:
             return timedelta(minutes=DELTA), timedelta(minutes=candle_session_size)
         if self.time_frame_unit == HOURLY:
             return timedelta(hours=DELTA), timedelta(hours=candle_session_size)
-        if self.time_frame_unit == DAILY:
-            return timedelta(days=DELTA), timedelta(hours=candle_session_size)
+        else:
+            return timedelta(days=9999), timedelta(days=1)
 
     def pull_and_export(self):
         file_export = self.file_name_creator()
