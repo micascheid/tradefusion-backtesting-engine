@@ -24,7 +24,14 @@ class IntervalLimits(Enum):
     FOUR_HOUR = 720
     ONE_DAY = None
 
-
+interval_limit_max_time_call = {
+    "1m": IntervalLimits.ONE_MINUTE.value * 60,
+    "5m": IntervalLimits.FIVE_MINUTE.value * 5,
+    "30m": IntervalLimits.THIRTY_MINUTE.value * 30,
+    "1h": IntervalLimits.ONE_HOUR.value * 1,
+    "4h": IntervalLimits.FOUR_HOUR.value * 4,
+    "1d": IntervalLimits.ONE_DAY.value
+}
 interval_limit_dict = {
     "1m": IntervalLimits.ONE_MINUTE,
     "5m": IntervalLimits.FIVE_MINUTE,

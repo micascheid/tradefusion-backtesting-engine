@@ -6,7 +6,7 @@ import nomics
 import NomicsAPI
 import json
 from datetime import datetime, timedelta
-from IntervalLimits import IntervalLimits, interval_limit_dict, TimeFrames
+from IntervalLimits import IntervalLimits, interval_limit_dict, interval_limit_max_time_call, TimeFrames
 
 KEY = NomicsAPI.API_KEY
 U = "__"
@@ -86,16 +86,16 @@ class DataPull:
         return file_name
 
     def configure_time_delta(self) -> (timedelta, timedelta):
+        max_time_call = interval_limit_max_time_call[self.time_frame]
+        candle_session_size = int(self.time_frame_quantity)
+        DELTA = max_time_call-candle_session_size
+
         if self.time_frame_unit == MINUTELY:
-            return (timedelta(minutes=(interval_limit_dict[self.time_frame].value * int(self.time_frame_quantity)) - 1),
-                    timedelta(minutes=int(self.time_frame_quantity)))
+            return timedelta(minutes=DELTA), timedelta(minutes=candle_session_size)
         if self.time_frame_unit == HOURLY:
-            return (timedelta(hours=(interval_limit_dict[self.time_frame].value * int(self.time_frame_quantity)) - 1),
-                    timedelta(hours=int(self.time_frame_quantity)))
+            return timedelta(hours=DELTA), timedelta(hours=candle_session_size)
         if self.time_frame_unit == DAILY:
-            if self.time_frame_unit == HOURLY:
-                return (timedelta(hours=interval_limit_dict[self.time_frame].value - 1),
-                        timedelta(hours=int(self.time_frame_quantity)))
+            return timedelta(days=DELTA), timedelta(hours=candle_session_size)
 
     def pull_and_export(self):
         file_export = self.file_name_creator()
