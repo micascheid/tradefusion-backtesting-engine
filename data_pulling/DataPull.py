@@ -1,12 +1,12 @@
 """
 DataPull Class takes the following: market, time_frame, start, end
 """
-import nomics
 
-import NomicsAPI
+
+from data_pulling import NomicsAPI
 import json
 from datetime import datetime, timedelta
-from IntervalLimits import IntervalLimits, interval_limit_dict, interval_limit_max_time_call, TimeFrames
+from data_pulling.IntervalLimits import IntervalLimits, interval_limit_dict, interval_limit_max_time_call, TimeFrames
 import pandas as pd
 
 
@@ -17,6 +17,35 @@ HOURLY = "h"
 DAILY = "d"
 JSON_RAW_DIR = "./data/json_raw/"
 JSON_RAW_TO_DF = "./data/df_raw/"
+
+
+def get_missing_data_set_times(json_data_list):
+    results = json_data_list
+    HOUR_ADD = timedelta(hours=1)
+    time_compare = results[0]['timestamp']
+    missing_times = []
+    for x in range(len(results)):
+        while not time_compare == results[x]['timestamp']:
+            missing_times.append(time_compare)
+            time_next = datetime.strptime(time_compare.strip('Z'), "%Y-%m-%dT%H:%M:%S")
+            time_compare = (time_next + HOUR_ADD).isoformat() + "Z"
+        if time_compare == results[x]['timestamp']:
+            time_next = datetime.strptime(time_compare.strip('Z'), "%Y-%m-%dT%H:%M:%S")
+            time_compare = (time_next + HOUR_ADD).isoformat() + "Z"
+    return missing_times
+
+
+def export_json(file_name, raw_json):
+    list_for_export = json.dumps(raw_json)
+    file = open(JSON_RAW_DIR + file_name, 'w')
+    file.write(list_for_export)
+    file.close()
+
+
+def export_df(file_name, raw_json):
+    df = pd.DataFrame.from_records(raw_json)
+    df = df.set_index('timestamp')
+    df.to_csv(JSON_RAW_TO_DF + file_name + ".csv")
 
 
 class DataPull:
@@ -60,7 +89,7 @@ class DataPull:
                     [main_list.append(candle) for candle in json_obj]
                     print(i, "|", time_1, time_2)
                     start_new = time_2 + DELTA_NEXT
-            if last_candles != 0:
+            if last_candles != 0 or not conglomerate:
                 print("last call", "|", start_new, self.end)
                 json_obj = self.api_call(start=start_new, end=self.end)
                 [main_list.append(candle) for candle in json_obj]
@@ -107,18 +136,8 @@ class DataPull:
     def pull_and_export(self):
         file_export = self.file_name_creator()
         raw_json = self.data_conglomeration()
-        self.export_json(file_export, raw_json)
-        self.export_df(file_export, raw_json)
-
-    def export_json(self, file_name, raw_json):
-        list_for_export = json.dumps(raw_json)
-        file = open(JSON_RAW_DIR + file_name, 'w')
-        file.write(list_for_export)
-        file.close()
-
-    def export_df(self,file_name, raw_json):
-        df = pd.DataFrame.from_records(raw_json)
-        df.to_csv(JSON_RAW_TO_DF + file_name + "csv")
+        export_json(file_export, raw_json)
+        export_df(file_export, raw_json)
 
 
 

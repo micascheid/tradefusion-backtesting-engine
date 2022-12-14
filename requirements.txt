@@ -1,0 +1,7 @@
+pandas
+pandas-ta
+numpy
+backtesting
+matplotlib
+nomics-python
+python-dotenv
