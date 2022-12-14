@@ -13,5 +13,6 @@ MessAround.py
 #Handling empty data folders
 !/data/json_raw/.gitkeep
 !/data/df_raw/.gitkeep
+!/data/backtest_graphics/.gitkeep
 
 
