@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import datetime
 import matplotlib
+import numpy as np
 
 
 
@@ -37,6 +38,32 @@ def EMA(df, window):
 def RSI(df, window):
     rsi_series = ta.rsi(df['Close'], window=window)
     return rsi_series
+
+def BBWP(df, window):
+    STD = 2.0
+    LOOKBACK = 252
+    bbands_series = ta.bbands(df['Close'], std=STD, mamode='sma', length=13, window=window)
+    # bbwp_series = pd.DataFrame(index=bbands_series.index,columns=np.array(bbands_series['BBB_14_2']))
+    BBW = bbands_series['BBB_13_2.0']
+    bbwp_series = np.array([])
+    bbwp = [0]*LOOKBACK
+
+    #make sure the series is at least as long as 252
+    if len(BBW) > LOOKBACK:
+        for current_bbw in range (LOOKBACK, len(BBW)):
+            count = 0
+            for bbw in range(current_bbw-LOOKBACK, current_bbw):
+                if BBW[bbw] < BBW[current_bbw]:
+                    count+=1
+            bbwp.append((count/LOOKBACK)*100)
+        bbwp_series = np.array(bbwp)
+    bbwp_series = pd.DataFrame(index=bbands_series.index, data=bbwp_series, columns=['BBWP'])
+
+    #replace the bbwp_series value with the new calculated value
+
+    # for value in bbwp_series:
+    return bbwp_series
+
 
 
 def build_data_file_path(symbol):
@@ -74,6 +101,7 @@ class KrownCross(Strategy):
     data_df_5_min = None
     ema_period_1 = 9
     ema_period_2 = 21
+    ema_period_3 = 55
     rsi_period = 14
     rsi_low = 30
     rsi_high = 70
@@ -86,9 +114,21 @@ class KrownCross(Strategy):
     def init(self):
         super().init()
         # Add indicators
+        """
+            The krown cross method consists of the following indicators:
+            EMA 9: Exponential Moving average 9 - short term trend
+            EMA 21: Exponential Moving average 21 - mid term trend
+            EMA 55: Exponential Moving average 55 - long term trend
+            RSI:Relative Strength Index - measuring the strength of a move
+            BBWP: Bollinger Band Width Percentage - Measures volatility
+            BMSB: Boolean which says weather or not data exists under or below Bitcoins 20week MA
+        """
         self.ema_1 = self.I(EMA, self.data.df, self.ema_period_1)
         self.ema_2 = self.I(EMA, self.data.df, self.ema_period_2)
+        self.ema_3 = self.I(EMA, self.data.df, self.ema_period_3)
         self.rsi = self.I(RSI, self.data.df, self.rsi_period)
+        self.bbwp = self.I(BBWP, self.data.df, 0)
+
 
     def next(self):
         super().init()
