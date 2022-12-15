@@ -57,23 +57,23 @@ def run_backtest(path, strategy):
     print(stats.tail())
     print(stats._strategy)
     print(heatmap)
-    bt.plot(plot_volume=True, plot_pl=True, filename='./data/html/test.html', open_browser=False)
+    bt.plot(plot_volume=True, plot_pl=True, filename='./data/backtest_graphics/test.html', open_browser=False)
     heatmap.plot()
 
 
 if __name__ == "__main__":
     # The below is for data pulling stuff
-    start = datetime(year=2020, month=1, day=1, hour=0, minute=0, second=0)
+    start = datetime(year=2022, month=1, day=1, hour=0, minute=0, second=0)
     end = datetime(year=2022, month=12, day=1, hour=0, minute=0, second=0)
     dp1 = DataPull(quote="USD", base="BTC", time_frame_unit="h", time_frame_quantity="1", start=start, end=end)
     # # f = open("data/json_raw/BTC-USD__1h__2022-01-01T00:00:00__2022-12-01T00:00:00")
     # # print(get_missing_data_set_times(json.load(f)))
-    # dp1.pull_and_export()
+    dp1.pull_and_export()
 
 
 
     # The below is for backtesting production
-    file_path = './data/df_raw/BTC-USD__1h__2020-01-01T00:00:00__2022-12-01T00:00:00.csv'
+    file_path = './data/df_raw/BTC-USD__1h__2022-01-01T00:00:00__2022-12-01T00:00:00.csv'
 
     t = time()
     run_backtest(file_path, KrownCross)

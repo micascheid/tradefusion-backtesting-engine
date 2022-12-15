@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-import NomicsAPI
+import data_pulling.NomicsAPI as NomicsAPI
 import urllib.request
 
 
