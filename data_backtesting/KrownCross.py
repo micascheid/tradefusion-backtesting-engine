@@ -1,27 +1,15 @@
-import backtesting
-import pandas_ta as ta
-from backtesting import Strategy, Backtest
-import numpy as np
-import pandas as pd
-import datetime
-import matplotlib
-import numpy as np
-
-
-
-import os
-import time
+"""
+    - Static functions involve indicators unique to the strategy
+    - init is where to add indicators for the strategy you want to implement
+    - next function is the buy/sell logic for the strategy
+"""
 from os.path import exists
-
 import backtesting
 import pandas
 import pandas_ta as ta
-from backtesting import Strategy, Backtest
+from backtesting import Strategy
 import numpy as np
 import pandas as pd
-import datetime
-import matplotlib
-# import yfinance as yf
 
 
 import multiprocessing as mp
@@ -46,7 +34,7 @@ def BBWP(df, window):
     # bbwp_series = pd.DataFrame(index=bbands_series.index,columns=np.array(bbands_series['BBB_14_2']))
     BBW = bbands_series['BBB_13_2.0']
     bbwp_series = np.array([])
-    bbwp = [0]*LOOKBACK
+    bbwp = [0.0]*LOOKBACK
 
     #make sure the series is at least as long as 252
     if len(BBW) > LOOKBACK:
@@ -54,7 +42,7 @@ def BBWP(df, window):
             count = 0
             for bbw in range(current_bbw-LOOKBACK, current_bbw):
                 if BBW[bbw] < BBW[current_bbw]:
-                    count+=1
+                    count += 1
             bbwp.append((count/LOOKBACK)*100)
         bbwp_series = np.array(bbwp)
     bbwp_series = pd.DataFrame(index=bbands_series.index, data=bbwp_series, columns=['BBWP'])
@@ -63,38 +51,6 @@ def BBWP(df, window):
 
     # for value in bbwp_series:
     return bbwp_series
-
-
-
-def build_data_file_path(symbol):
-    file_name = f"{symbol}.txt"
-    file_path = os.path.join(symbol, file_name)
-    return file_path
-
-
-# def reformat_time(x):
-#     time_str = str(x)
-#     time_str = time_str.zfill(4)
-#     hour = time_str[0:2]
-#     minute = time_str[2:4]
-#     return f" {hour}:{minute}"
-
-
-def load_data_file(path):
-    file_path = path
-    if not exists(file_path):
-        print(f"Error loading file {file_path}")
-        return None
-    #  Load data file
-    df1 = pd.read_csv(file_path)
-    if df1 is None or len(df1) == 0:
-        print(f"Empty file: {file_path}")
-        return None
-    df1 = df1.rename(columns={"open": "Open", "close": "Close", "low": "Low", "high": "High", "volume": "Volume"})
-    df1['timestamp'] = pd.to_datetime(df1['Date'])
-    df1 = df1.set_index('Date')
-
-    return df1
 
 
 class KrownCross(Strategy):
@@ -116,12 +72,12 @@ class KrownCross(Strategy):
         # Add indicators
         """
             The krown cross method consists of the following indicators:
-            EMA 9: Exponential Moving average 9 - short term trend
-            EMA 21: Exponential Moving average 21 - mid term trend
-            EMA 55: Exponential Moving average 55 - long term trend
-            RSI:Relative Strength Index - measuring the strength of a move
-            BBWP: Bollinger Band Width Percentage - Measures volatility
-            BMSB: Boolean which says weather or not data exists under or below Bitcoins 20week MA
+            EMA 9: Exponential Moving average 9 - short term trend ✔
+            EMA 21: Exponential Moving average 21 - mid term trend ✔
+            EMA 55: Exponential Moving average 55 - long term trend ✔
+            RSI: Relative Strength Index - measuring the strength of a move ✔
+            BBWP: Bollinger Band Width Percentage - Measures volatility ✔
+            BMSB: np(array with timestamp and whether or not btc is above or below. Do this manually
         """
         self.ema_1 = self.I(EMA, self.data.df, self.ema_period_1)
         self.ema_2 = self.I(EMA, self.data.df, self.ema_period_2)
@@ -133,6 +89,7 @@ class KrownCross(Strategy):
     def next(self):
         super().init()
         long_entry_signals = 0
+
         #  EMA checks
         if self.ema_1[-1] > self.ema_2[-1] and self.ema_1[-2] <= self.ema_2[-2]:
             long_entry_signals += 1

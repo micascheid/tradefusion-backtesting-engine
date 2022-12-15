@@ -68,7 +68,7 @@ if __name__ == "__main__":
     dp1 = DataPull(quote="USD", base="BTC", time_frame_unit="h", time_frame_quantity="1", start=start, end=end)
     # # f = open("data/json_raw/BTC-USD__1h__2022-01-01T00:00:00__2022-12-01T00:00:00")
     # # print(get_missing_data_set_times(json.load(f)))
-    dp1.pull_and_export()
+    # dp1.pull_and_export()
 
 
 
@@ -79,10 +79,5 @@ if __name__ == "__main__":
     run_backtest(file_path, KrownCross)
     print(time()-t)
 
-
-    """
-    What my backtesting module needs to look like:
-    Have certain amount of indicators
-    """
 
 
