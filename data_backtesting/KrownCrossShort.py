@@ -15,7 +15,7 @@ from talib import BBANDS
 
 import multiprocessing as mp
 
-mp.set_start_method('fork')
+# mp.set_start_method('fork')
 backtesting.set_bokeh_output(notebook=False)
 
 def EMA(df, window):
@@ -54,29 +54,31 @@ def BBWP(df):
     return bbwp_series
 
 
-class KrownCross(Strategy):
+class KrownCrossShort(Strategy):
     data_df_5_min = None
-    ema_period_1 = 12
+    ema_period_1 = 9
     ema_period_2 = 21
-    ema_period_3 = 61
-    separation = 3
-    bbwp_entry = 30
-    bbwp_exit = 95
+    ema_period_3 = 54
+    separation = 2
+    bbwp_entry = 40
+    bbwp_exit = 80
     # rsi_period = 14
     # rsi_low = 30
     # rsi_high = 70
     take_profit_percent = 3
     stop_loss_percent = 1
     last_purchase_price = 0
-    long_hold = 0
+    short_hold = 0
     i = 0
-    bbwp_hit_exit = 0
+    bbwp_hit_exit = 6
+    bbwp_hit_counter = 0
     OPTIMIZE_VALUES = {'ema_period_1': range(5, 13, 1),
                        'ema_period_2': range(12, 30, 1),
                        'ema_period_3': range(45, 65, 2),
                        'bbwp_entry': range(0, 70, 10),
                        'bbwp_exit': range(70, 100, 5),
-                       'separation': range(0, 4, 1)}
+                       'separation': range(0, 4, 1),
+                       'bbwp_hit_exit': range(0, 10, 1)}
 
     def init(self):
         super().init()
@@ -113,40 +115,40 @@ class KrownCross(Strategy):
         '''
 
         prev_close = self.data.df.Close[-1]
-        long_entry_signals = 0
+        short_entry_signals = 0
         seperation_calc = abs((prev_close-self.ema_2[-1])/self.ema_2[-1])*100
         bbwp_slope = True if self.bbwp[0]/self.bbwp[-1] > 0 else False
 
-        # Check 1: EMA Checks of 9>21>55
-        if self.ema_1[-1] > self.ema_2[-1] > self.ema_3[-1]:
-            long_entry_signals += 1
+        # Check 1: EMA Checks of 9<21<55
+        if self.ema_1[-1] < self.ema_2[-1] < self.ema_3[-1]:
+            short_entry_signals += 1
 
         # Check 2: Degree of separation check
         if seperation_calc <= self.separation:
-            long_entry_signals += 1
+            short_entry_signals += 1
 
         # Check 3: bbwp checks
         if self.bbwp[-1] < self.bbwp_entry:
-            long_entry_signals += 1
+            short_entry_signals += 1
 
         #Take profit
         if self.bbwp[-1] >= self.bbwp_exit:
-            self.bbwp_hit_exit += 1
+            self.bbwp_hit_counter += 1
         price = self.data.df.Close[-1]
-        is_take_profit = self.long_hold == 1 and self.bbwp_hit_exit == 2
+        is_take_profit = self.short_hold == 1 and self.bbwp_hit_counter == self.bbwp_hit_exit
 
         # Stop loss
-        is_stop_loss = self.long_hold == 1 and self.ema_1[-1] < self.ema_2[-1] or prev_close <= self.ema_3[-1]
+        is_stop_loss = self.short_hold == 1 and self.ema_1[-1] > self.ema_2[-1] or prev_close >= self.ema_3[-1]
 
-        # Long entry
-        if self.long_hold == 0 and long_entry_signals == 3:
-            self.buy()
+        # Short entry
+        if self.short_hold == 0 and short_entry_signals == 3:
+            self.sell()
             self.last_purchase_price = price
-            self.long_hold = 1
+            self.short_hold = 1
 
-        # Long exit
-        elif self.long_hold == 1 and (is_take_profit or is_stop_loss):
+        # Short exit
+        elif self.short_hold == 1 and (is_take_profit or is_stop_loss):
             self.position.close()
-            self.long_hold = 0
+            self.short_hold = 0
             self.last_purchase_price = 0
-            self.bbwp_hit_exit = 0
+            self.bbwp_hit_counter = 0
