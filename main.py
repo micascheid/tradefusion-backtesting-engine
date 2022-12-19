@@ -1,12 +1,15 @@
+import glob
 from os.path import exists
 from data_pulling.DataPull import DataPull
-from data_backtesting import KrownCross
+from data_backtesting import KrownCrossLong
 from datetime import datetime
 from data_pulling.DataPull import DataPull
 from backtesting.backtesting import Backtest
 import os
 import pandas as pd
-from data_backtesting.KrownCross import KrownCross
+from data_backtesting.KrownCrossLong import KrownCrossLong
+from data_backtesting.KrownCrossShort import KrownCrossShort
+from data_backtesting.KrownCrossBoth import KrownCrossBoth
 from time import time
 """
 Plan for Dec7th
@@ -35,49 +38,43 @@ def load_data_file(path):
     return df1
 
 
-def run_backtest(path, strategy):
+def run_backtest(path, strategy, optimize_dict, cash, optimize) -> dict:
     # If exclusive orders (each new order auto-closes previous orders/position),
     # cancel all non-contingent orders and close all open trades beforehand
     df = load_data_file(path)
-    bt = Backtest(df, strategy, cash=100000, commission=.00075, trade_on_close=True,
+    bt = Backtest(df, strategy, cash=cash, commission=.00075, trade_on_close=True,
                   exclusive_orders=True, hedging=False)
     stats = bt.run()
-    print(stats)
+    # print(stats)
+    # print('\n\n')
     # bt.plot()
-    stats, heatmap = bt.optimize(ema_period_1=range(5, 13, 1),
-                                 ema_period_2=range(13, 21, 1),
-                                 rsi_period=range(10, 20, 1),
-                                 rsi_low=range(20, 40, 5),
-                                 rsi_high=range(60, 80, 5),
-                                 take_profit_percent=range(3, 10, 2),
-                                 stop_loss_percent=range(1, 10, 2), maximize='Equity Final [$]', max_tries=200,
-                                 random_state=0,
-                                 return_heatmap=True)
-    print(stats)
-    print(stats.tail())
-    print(stats._strategy)
-    print(heatmap)
-    bt.plot(plot_volume=True, plot_pl=True, filename='./data/backtest_graphics/test.html', open_browser=False)
-    heatmap.plot()
-
+    if optimize:
+        stats, heatmap = bt.optimize(**optimize_dict,
+                                     maximize='Equity Final [$]',
+                                     max_tries=200,
+                                     random_state=0,
+                                     return_heatmap=True)
+        print(stats)
+        print(stats.tail())
+        print(stats._strategy)
+        print(heatmap)
+        bt.plot(plot_volume=True, plot_pl=True, filename='./data/backtest_graphics/test.html', open_browser=False)
+        heatmap.plot()
+    return stats
 
 if __name__ == "__main__":
     # The below is for data pulling stuff
-    start = datetime(year=2022, month=1, day=1, hour=0, minute=0, second=0)
-    end = datetime(year=2022, month=12, day=1, hour=0, minute=0, second=0)
-    dp1 = DataPull(quote="USD", base="BTC", time_frame_unit="h", time_frame_quantity="1", start=start, end=end)
-    # # f = open("data/json_raw/BTC-USD__1h__2022-01-01T00:00:00__2022-12-01T00:00:00")
-    # # print(get_missing_data_set_times(json.load(f)))
+    # start = datetime(year=2011, month=8, day=1, hour=0, minute=0, second=0)
+    # end = datetime(year=2022, month=12, day=16, hour=23, minute=0, second=0)
+    # dp1 = DataPull(quote="USD", base="BTC", time_frame_unit="h", time_frame_quantity="1", start=start, end=end)
+    # f = open("data/json_raw/BTC-USD__1h__2022-01-01T00:00:00__2022-12-01T00:00:00")
+    # print(get_missing_data_set_times(json.load(f)))
     # dp1.pull_and_export()
+    # print("-------------1 HOUR-------------")
 
-
-
-    # The below is for backtesting production
-    file_path = './data/df_raw/BTC-USD__1h__2022-01-01T00:00:00__2022-12-01T00:00:00.csv'
-
+    file_path = 'data/df_raw/btc_bull/4h/BTC-USD__1h__2019-03-18T00:00:00__2019-09-01T23:00:00.csv'
     t = time()
-    run_backtest(file_path, KrownCross)
+    run_backtest(file_path, KrownCrossBoth, KrownCrossBoth.OPTIMIZE_VALUES, 100000, False)
     print(time()-t)
-
 
 

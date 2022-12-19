@@ -54,14 +54,14 @@ def BBWP(df):
     return bbwp_series
 
 
-class KrownCross(Strategy):
+class KrownCrossLong(Strategy):
     data_df_5_min = None
-    ema_period_1 = 9
-    ema_period_2 = 21
-    ema_period_3 = 55
-    separation = 1
-    bbwp_entry = 40
-    bbwp_exit = 90
+    ema_period_1 = 10
+    ema_period_2 = 22
+    ema_period_3 = 61
+    separation = 3
+    bbwp_entry = 60
+    bbwp_exit = 95
     # rsi_period = 14
     # rsi_low = 30
     # rsi_high = 70
@@ -70,14 +70,16 @@ class KrownCross(Strategy):
     last_purchase_price = 0
     long_hold = 0
     i = 0
-    bbwp_hit_exit = 0
-    OPTIMIZE_VALUES = {'ema_period_1': range(5, 13, 1),
-                       'ema_period_2': range(12, 30, 1),
-                       'ema_period_3': range(45, 65, 2),
-                       'bbwp_entry': range(0, 70, 10),
-                       'bbwp_exit': range(70, 100, 5),
-                       'separation': range(0, 4, 1)}
-
+    bbwp_hit_counter = 0
+    bbwp_hit_exit = 5
+    # OPTIMIZE_VALUES = {'ema_period_1': range(5, 13, 1),
+    #                    'ema_period_2': range(12, 30, 1),
+    #                    'ema_period_3': range(45, 65, 2),
+    #                    'bbwp_entry': range(0, 70, 10),
+    #                    'bbwp_exit': range(70, 100, 5),
+    #                    'separation': range(0, 4, 1),
+    #                    'bbwp_hit_exit': range(0, 10, 1)}
+    OPTIMIZE_VALUES = {'bbwp_hit_exit': range(0, 10, 1)}
     def init(self):
         super().init()
         # Add indicators
@@ -93,7 +95,6 @@ class KrownCross(Strategy):
         self.ema_1 = self.I(EMA, self.data.df, self.ema_period_1)
         self.ema_2 = self.I(EMA, self.data.df, self.ema_period_2)
         self.ema_3 = self.I(EMA, self.data.df, self.ema_period_3)
-        # self.rsi = self.I(RSI, self.data.df, self.rsi_period)
         self.bbwp = self.I(BBWP, self.data.df)
 
     def next(self):
@@ -133,11 +134,10 @@ class KrownCross(Strategy):
         if self.bbwp[-1] >= self.bbwp_exit:
             self.bbwp_hit_exit += 1
         price = self.data.df.Close[-1]
-        is_take_profit = self.long_hold == 1 and self.bbwp_hit_exit == 2
+        is_take_profit = self.long_hold == 1 and self.bbwp_hit_counter == self.bbwp_hit_exit
 
         # Stop loss
         is_stop_loss = self.long_hold == 1 and self.ema_1[-1] < self.ema_2[-1] or prev_close <= self.ema_3[-1]
-
         # Long entry
         if self.long_hold == 0 and long_entry_signals == 3:
             self.buy()
@@ -149,4 +149,4 @@ class KrownCross(Strategy):
             self.position.close()
             self.long_hold = 0
             self.last_purchase_price = 0
-            self.bbwp_hit_exit = 0
+            self.bbwp_hit_counter = 0
