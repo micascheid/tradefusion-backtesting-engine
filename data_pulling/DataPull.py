@@ -43,7 +43,8 @@ def export_json(file_name, raw_json):
 
 
 def export_df(file_name, raw_json):
-    df = pd.DataFrame.from_records(raw_json)
+    json_obj = pd.json_normalize(raw_json)
+    df = pd.DataFrame.from_records(json_obj)
     df = df.set_index('timestamp')
     df.to_csv(JSON_RAW_TO_DF + file_name + ".csv")
 

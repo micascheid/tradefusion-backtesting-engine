@@ -1,15 +1,17 @@
 import glob
 from os.path import exists
+import json
 from data_pulling.DataPull import DataPull
 from data_backtesting import KrownCrossLong
 from datetime import datetime
-from data_pulling.DataPull import DataPull
+from data_pulling.DataPull import DataPull, export_df
 from backtesting.backtesting import Backtest
 import os
 import pandas as pd
 from data_backtesting.KrownCrossLong import KrownCrossLong
 from data_backtesting.KrownCrossShort import KrownCrossShort
 from data_backtesting.KrownCrossBoth import KrownCrossBoth
+from data_backtesting.ColoradoSnowPack import ColoradoSnowPack
 from time import time
 """
 Plan for Dec7th
@@ -45,36 +47,50 @@ def run_backtest(path, strategy, optimize_dict, cash, optimize) -> dict:
     bt = Backtest(df, strategy, cash=cash, commission=.00075, trade_on_close=True,
                   exclusive_orders=True, hedging=False)
     stats = bt.run()
-    # print(stats)
+    print(stats)
     # print('\n\n')
     # bt.plot()
     if optimize:
         stats, heatmap = bt.optimize(**optimize_dict,
                                      maximize='Equity Final [$]',
-                                     max_tries=200,
+                                     max_tries=1000,
                                      random_state=0,
                                      return_heatmap=True)
         print(stats)
         print(stats.tail())
         print(stats._strategy)
         print(heatmap)
-        bt.plot(plot_volume=True, plot_pl=True, filename='./data/backtest_graphics/test.html', open_browser=False)
-        heatmap.plot()
+        # bt.plot(plot_volume=True, plot_pl=True, filename='./data/backtest_graphics/test.html', open_browser=True)
+        # heatmap.plot()
     return stats
 
 if __name__ == "__main__":
     # The below is for data pulling stuff
-    # start = datetime(year=2011, month=8, day=1, hour=0, minute=0, second=0)
-    # end = datetime(year=2022, month=12, day=16, hour=23, minute=0, second=0)
-    # dp1 = DataPull(quote="USD", base="BTC", time_frame_unit="h", time_frame_quantity="1", start=start, end=end)
+    start = datetime(year=2015, month=1, day=14, hour=0, minute=0, second=0)
+    end = datetime(year=2022, month=12, day=1, hour=0, minute=0, second=0)
+    dp1 = DataPull(quote="USD", base="BTC", time_frame_unit="m", time_frame_quantity="5", start=start, end=end)
     # f = open("data/json_raw/BTC-USD__1h__2022-01-01T00:00:00__2022-12-01T00:00:00")
     # print(get_missing_data_set_times(json.load(f)))
-    # dp1.pull_and_export()
+    dp1.pull_and_export()
+
+    # f = open('data/df_raw/BTC-USD__5m__2020-01-01T00:00:00__2022-12-01T00:00:00.csv', 'r')
+    # json_obj = pd.json_normalize(json.loads(f.read()))
+    # df = pd.DataFrame.from_records(json_obj)
+    # if df.isna().any().any():
+    #     print(True)
+
+    # export_df('BTC-USD__5m__2022-01-01T00:00:00__2022-12-01T00:00:00.csv', json_obj)
+
     # print("-------------1 HOUR-------------")
 
-    file_path = 'data/df_raw/btc_bull/4h/BTC-USD__1h__2019-03-18T00:00:00__2019-09-01T23:00:00.csv'
-    t = time()
-    run_backtest(file_path, KrownCrossBoth, KrownCrossBoth.OPTIMIZE_VALUES, 100000, False)
-    print(time()-t)
+    file_path = 'data/df_raw/BTC-USD__5m__2020-01-01T00:00:00__2022-12-01T00:00:00.csv'
+    # file_path_2 = 'data/df_raw/btc_bull/4h/BTC-USD__4h__2021-09-06T00:00:00__2021-12-05T23:00:00.csv'
+    # file_path_3 = 'data/df_raw/btc_bear/4h/BTC-USD__4h__2022-04-11T00:00:00__2022-10-30T23:00:00.csv'
+    # t = time()
+    # run_backtest(file_path, ColoradoSnowPack, ColoradoSnowPack.OPTIMIZE_VALUES, 100000, True)
+    # print(time()-t)
 
-
+    # for each_file in glob.glob('data/df_raw/btc_bull/4h/*.csv'):
+    #     filepath = 'data/df_raw/btc_bull/4h/' + os.path.basename(each_file)
+    #     stats = run_backtest(filepath, ColoradoSnowPack, ColoradoSnowPack.OPTIMIZE_VALUES, 100000, True)
+    #     print(stats['Return [%]'])

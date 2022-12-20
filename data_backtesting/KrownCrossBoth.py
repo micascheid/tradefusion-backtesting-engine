@@ -62,9 +62,6 @@ class KrownCrossBoth(Strategy):
     separation = 2
     bbwp_entry = 60
     bbwp_exit = 70
-    # rsi_period = 14
-    # rsi_low = 30
-    # rsi_high = 70
     take_profit_percent = 3
     stop_loss_percent = 1
     last_purchase_price = 0
