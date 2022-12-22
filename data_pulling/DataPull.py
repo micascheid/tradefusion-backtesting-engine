@@ -43,14 +43,15 @@ def export_json(file_name, raw_json):
 
 
 def export_df(file_name, raw_json):
-    json_obj = pd.json_normalize(raw_json)
-    df = pd.DataFrame.from_records(json_obj)
+    # json_obj = pd.json_normalize(raw_json)
+    df = pd.DataFrame.from_records(raw_json)
     df = df.set_index('timestamp')
     df.to_csv(JSON_RAW_TO_DF + file_name + ".csv")
 
 
 class DataPull:
-    def __init__(self, quote, base, time_frame_unit, time_frame_quantity, start, end):
+    def __init__(self, time_frame_unit, time_frame_quantity, start, end, quote=None, base=None, market=None,
+                 exchange=None):
         self.quote = quote
         self.base = base
         self.time_frame_unit = time_frame_unit
@@ -60,10 +61,17 @@ class DataPull:
         self.end = end
         self.deltas = self.configure_time_delta()
         self.nomics = NomicsAPI.API
+        self.market = market
+        self.exchange = exchange
 
     def api_call(self, start, end) -> list:
-        return self.nomics.Candles.get_candles(quote=self.quote, base=self.base, interval=self.time_frame,
+        if self.exchange is None:
+            return self.nomics.Candles.get_candles(quote=self.quote, base=self.base, interval=self.time_frame,
                                                start=start.isoformat()+"Z", end=end.isoformat()+"Z")
+        else:
+            return self.nomics.Candles.get_candles(market=self.market, exchange=self.exchange,
+                                                   interval=self.time_frame, start=start.isoformat()+"Z",
+                                                   end=end.isoformat()+"Z")
 
     def data_conglomeration(self) -> list:
         start = self.start
@@ -115,12 +123,20 @@ class DataPull:
 
     def file_name_creator(self) -> str:
         # EX "/data/json_raw/in_sample/btcusd__1h__2012-01-01:00:00:00__2022-0101:00:00:00"
-        file_name = ""
-        file_name = file_name + self.base + "-" + self.quote
-        file_name = file_name + U + self.time_frame
-        file_name = file_name + U + datetime.strftime(self.start, "%Y-%m-%dT%H:%M:%S")
-        file_name = file_name + U + datetime.strftime(self.end, "%Y-%m-%dT%H:%M:%S")
-        return file_name
+        if self.exchange is None:
+            file_name = ""
+            file_name = file_name + self.base + "-" + self.quote
+            file_name = file_name + U + self.time_frame
+            file_name = file_name + U + datetime.strftime(self.start, "%Y-%m-%dT%H:%M:%S")
+            file_name = file_name + U + datetime.strftime(self.end, "%Y-%m-%dT%H:%M:%S")
+            return file_name
+        else:
+            file_name = ""
+            file_name = file_name + self.exchange + "-" + self.market
+            file_name = file_name + U + self.time_frame
+            file_name = file_name + U + datetime.strftime(self.start, "%Y-%m-%dT%H:%M:%S")
+            file_name = file_name + U + datetime.strftime(self.end, "%Y-%m-%dT%H:%M:%S")
+            return file_name
 
     def configure_time_delta(self) -> (timedelta, timedelta):
         max_time_call = interval_limit_max_time_call[self.time_frame]

@@ -1,9 +1,11 @@
 import glob
 from os.path import exists
 import json
+import nomics
+from data_pulling import NomicsAPI
 from data_pulling.DataPull import DataPull
 from data_backtesting import KrownCrossLong
-from datetime import datetime
+from datetime import datetime, timedelta
 from data_pulling.DataPull import DataPull, export_df
 from backtesting.backtesting import Backtest
 import os
@@ -49,11 +51,11 @@ def run_backtest(path, strategy, optimize_dict, cash, optimize) -> dict:
     stats = bt.run()
     print(stats)
     # print('\n\n')
-    # bt.plot()
+    bt.plot()
     if optimize:
         stats, heatmap = bt.optimize(**optimize_dict,
                                      maximize='Equity Final [$]',
-                                     max_tries=1000,
+                                     max_tries=200,
                                      random_state=0,
                                      return_heatmap=True)
         print(stats)
@@ -64,12 +66,29 @@ def run_backtest(path, strategy, optimize_dict, cash, optimize) -> dict:
         # heatmap.plot()
     return stats
 
+def get_missing_data_set_times(json_data_list):
+    results = json_data_list
+    HOUR_ADD = timedelta(minutes=5)
+    time_compare = results[0]['timestamp']
+    missing_times = []
+    for x in range(len(results)):
+        while not time_compare == results[x]['timestamp']:
+            missing_times.append(time_compare)
+            time_next = datetime.strptime(time_compare.strip('Z'), "%Y-%m-%dT%H:%M:%S")
+            time_compare = (time_next + HOUR_ADD).isoformat() + "Z"
+        if time_compare == results[x]['timestamp']:
+            time_next = datetime.strptime(time_compare.strip('Z'), "%Y-%m-%dT%H:%M:%S")
+            time_compare = (time_next + HOUR_ADD).isoformat() + "Z"
+    return missing_times
+
 if __name__ == "__main__":
     # The below is for data pulling stuff
-    start = datetime(year=2015, month=1, day=14, hour=0, minute=0, second=0)
-    end = datetime(year=2022, month=12, day=1, hour=0, minute=0, second=0)
-    dp1 = DataPull(quote="USD", base="BTC", time_frame_unit="m", time_frame_quantity="5", start=start, end=end)
-    # f = open("data/json_raw/BTC-USD__1h__2022-01-01T00:00:00__2022-12-01T00:00:00")
+    start = datetime(year=2017, month=12, day=17, hour=0, minute=0, second=0)
+    end = datetime(year=2021, month=11, day=8, hour=23, minute=55, second=0)
+    # dp1 = DataPull(exchange="gdax", market="BTC", time_frame_unit="m", time_frame_quantity="5", start=start, end=end)
+    dp1 = DataPull(exchange="gdax", market="BTC-USD", time_frame_unit="m", time_frame_quantity="5", start=start,
+                   end=end)
+    # f = open('data/json_raw/BTC-USD__5m__2011-11-18T00:00:00__2018-12-15T00:00:00')
     # print(get_missing_data_set_times(json.load(f)))
     dp1.pull_and_export()
 
@@ -83,12 +102,12 @@ if __name__ == "__main__":
 
     # print("-------------1 HOUR-------------")
 
-    file_path = 'data/df_raw/BTC-USD__5m__2020-01-01T00:00:00__2022-12-01T00:00:00.csv'
+    file_path = 'data/df_raw/gdax-BTC-USD__5m__2022-01-15T00:00:00__2022-01-25T00:00:00.csv'
     # file_path_2 = 'data/df_raw/btc_bull/4h/BTC-USD__4h__2021-09-06T00:00:00__2021-12-05T23:00:00.csv'
     # file_path_3 = 'data/df_raw/btc_bear/4h/BTC-USD__4h__2022-04-11T00:00:00__2022-10-30T23:00:00.csv'
-    # t = time()
-    # run_backtest(file_path, ColoradoSnowPack, ColoradoSnowPack.OPTIMIZE_VALUES, 100000, True)
-    # print(time()-t)
+    t = time()
+    # run_backtest(file_path, ColoradoSnowPack, ColoradoSnowPack.OPTIMIZE_VALUES, 100000, False)
+    print(time()-t)
 
     # for each_file in glob.glob('data/df_raw/btc_bull/4h/*.csv'):
     #     filepath = 'data/df_raw/btc_bull/4h/' + os.path.basename(each_file)
